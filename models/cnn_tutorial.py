@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+# from https://pytorch.org/tutorials/beginner/blitz/neural_networks_tutorial.html
 
 class CNN(nn.Module):
 
@@ -16,6 +17,11 @@ class CNN(nn.Module):
         self.fc2 = nn.Linear(120, 84)
         self.fc3 = nn.Linear(84, 10)
 
+        
+        """You just have to define the forward function, and the backward function 
+        (where gradients are computed) is automatically defined for you using autograd. 
+        You can use any of the Tensor operations in the forward function."""
+        
     def forward(self, x):
         # Max pooling over a (2, 2) window
         x = F.max_pool2d(F.relu(self.conv1(x)), (2, 2))
