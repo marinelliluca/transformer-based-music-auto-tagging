@@ -117,14 +117,14 @@ class Frontend_mine(nn.Module):
 
     print(sum(p.numel() for p in conv_stack.parameters() if p.requires_grad)) # number of trainable parameters
 
-    print(conv_stack(torch.rand((32,1,128,646))).shape)
+    print(conv_stack(torch.rand((32,1,128,1000))).shape)
     """
     def __init__(self,stack_dict,in_channels=1):
         super(Frontend_mine, self).__init__()
         
         #self.version = version
         self.depth = len(stack_dict["list_out_channels"])
-        self.spec_bn = nn.BatchNorm2d(1)
+        self.freq_bn = nn.BatchNorm2d(1)
 
         # set class attributes in a for loop
         for i in range(self.depth):
@@ -140,7 +140,7 @@ class Frontend_mine(nn.Module):
         
         # bach_norm along freq_axis
         inputs = inputs.permute(2,1,0,3)# (Freq,Channel,Batch,Time)
-        x = self.spec_bn(inputs)
+        x = self.freq_bn(inputs)
         x = x.permute(2,1,0,3) 
         
         x = getattr(self,f"conv_block_{1}")(x)

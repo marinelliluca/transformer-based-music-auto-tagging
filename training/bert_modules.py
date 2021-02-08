@@ -192,10 +192,13 @@ class BertEncoder(nn.Module):
 
 
 class BertPooler(nn.Module):
-    def __init__(self, config):
+    def __init__(self, 
+                 config, 
+                 activation=None):
         super(BertPooler, self).__init__()
         self.dense = nn.Linear(config.hidden_size, config.hidden_size)
-        self.activation = nn.Tanh()
+        
+        self.activation = nn.Tanh() if activation is None else activation
 
     def forward(self, hidden_states):
         # We "pool" the model by simply taking the hidden state corresponding

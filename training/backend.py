@@ -38,7 +38,7 @@ class Backend(nn.Module):
                                  hidden_dropout_prob=0.4,
                                  attention_probs_dropout_prob=0.5)
         self.encoder = BertEncoder(bert_config)
-        self.pooler = BertPooler(bert_config)
+        self.pooler = BertPooler(bert_config, activation=nn.ELU())
         self.vec_cls = self.get_cls()
 
         # Dense
