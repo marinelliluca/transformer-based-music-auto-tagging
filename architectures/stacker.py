@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from .blocks.conv import BlockChoi
+from .front.conv import BlockChoi
 
 """
 Example:
