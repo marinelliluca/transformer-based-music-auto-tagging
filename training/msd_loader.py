@@ -1,4 +1,5 @@
 # coding: utf-8
+# adapted from https://github.com/minzwon/self-attention-music-tagging/blob/master/training/data_loader/msd_loader.py
 import os
 import numpy as np
 from torch.utils import data
