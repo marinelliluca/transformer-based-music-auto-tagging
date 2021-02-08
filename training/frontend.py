@@ -129,7 +129,7 @@ class Frontend_mine(nn.Module):
         # set class attributes in a for loop
         for i in range(self.depth):
             setattr(self, 
-                    f"conv_block_{i+1}", 
+                    f"conv_block{i+1}", 
                     BlockChoi(in_channels if i==0 else stack_dict["list_out_channels"][i-1],
                               stack_dict["list_out_channels"][i],
                               stack_dict["list_kernel_sizes"][i],
@@ -143,10 +143,10 @@ class Frontend_mine(nn.Module):
         x = self.freq_bn(inputs)
         x = x.permute(2,1,0,3) 
         
-        x = getattr(self,f"conv_block_{1}")(x)
+        x = getattr(self,f"conv_block{1}")(x)
 
         for i in range(1,self.depth):
-            x = getattr(self,f"conv_block_{i+1}")(x)
+            x = getattr(self,f"conv_block{i+1}")(x)
 
         # squeeze the singleton frequency dimension
         if x.size()[2]==1: 
