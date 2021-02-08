@@ -7,7 +7,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.autograd import Variable
 
-from .attention_modules_won import BertConfig, BertEncoder, BertEmbeddings, BertPooler, PositionalEncoding
+from .attention_modules_won import BertConfig, BertEncoder, BertPooler
 
 class Res_2d(nn.Module):
     def __init__(self, input_channels, output_channels, shape=3, stride=2):

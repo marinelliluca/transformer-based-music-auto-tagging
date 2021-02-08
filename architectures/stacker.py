@@ -49,10 +49,9 @@ class ConvStack(nn.Module):
 
             # squeeze the singleton frequency dimension
             if x.size()[2]==1: 
-                x = torch.squeeze(x,2)
+                x = x.squeeze(2)
             else:
                 raise Exception("Insufficient pooling along the frequency axis, "+
-                                "the required resulting size is 1.")
-        
+                                "the required resulting size is 1.")    
         return x
             
