@@ -10,25 +10,24 @@ class Backend(nn.Module):
     '''
     Heavily modified from https://github.com/minzwon/sota-music-tagging-models/
     '''
-    def __init__(self,backend_dict, 
+    def __init__(self,main_dict, 
                  bert_config = None):
         super(Backend, self).__init__()
 
+        backend_dict = main_dict["backend_dict"]
+        self.frontend_out_channels = main_dict["frontend_dict"]["list_out_channels"][-1]
         
-        self.frontend_channels = backend_dict["frontend_channels"]
-        
-        self.recurrent = backend_dict["recurrent"]
-        
+        self.seq2seq = None
         # seq2seq for position encoding
         if backend_dict["recurrent_units"] is not None:
-            self.seq2seq = nn.GRU(backend_dict["frontend_channels"], 
-                                  backend_dict["frontend_channels"], 
+            self.seq2seq = nn.GRU(self.frontend_out_channels, 
+                                  self.frontend_out_channels, 
                                   backend_dict["recurrent_units"], 
                                   batch_first=True) # input and output = (batch, seq, feature)
             
         # Transformer encoder
         if bert_config is None:
-            bert_config = BertConfig(hidden_size=backend_dict["frontend_channels"],
+            bert_config = BertConfig(hidden_size=self.frontend_out_channels,
                                      num_hidden_layers=2,
                                      num_attention_heads=8,
                                      intermediate_size=1024,
@@ -41,11 +40,11 @@ class Backend(nn.Module):
         
         # Dense
         self.dropout = nn.Dropout(0.5)
-        self.dense = nn.Linear(backend_dict["frontend_channels"], backend_dict["n_class"])
+        self.dense = nn.Linear(self.frontend_out_channels, backend_dict["n_class"])
         
     def get_cls(self,):
         torch.manual_seed(42) # for reproducibility
-        single_cls = torch.rand((1, self.frontend_channels))
+        single_cls = torch.rand((1, self.frontend_out_channels))
         return single_cls
 
     def append_cls(self, x):
