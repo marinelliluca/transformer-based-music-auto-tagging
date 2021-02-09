@@ -7,7 +7,10 @@ from functools import reduce
 from operator import __add__
 
 class Res_2d(nn.Module):
-    # Code adopted from https://github.com/minzwon/sota-music-tagging-models/
+    """
+    Adopted from https://github.com/minzwon/sota-music-tagging-models/
+    """
+
     def __init__(self, input_channels, output_channels, shape=3, stride=2):
         super(Res_2d, self).__init__()
         # convolution
@@ -17,7 +20,7 @@ class Res_2d(nn.Module):
         self.bn_2 = nn.BatchNorm2d(output_channels)
 
         # residual
-        self.diff = False
+        #self.diff = False
         if (stride != 1) or (input_channels != output_channels):
             self.conv_3 = nn.Conv2d(input_channels, output_channels, shape, stride=stride, padding=shape//2)
             self.bn_3 = nn.BatchNorm2d(output_channels)
@@ -40,7 +43,7 @@ def _calc_same_pad(i, k, s, d):
 
 class Conv2dSame(nn.Conv2d):
     """ Tensorflow like 'SAME' convolution wrapper for 2D convolutions
-    Code adopted from: https://github.com/human-analysis/MUXConv/blob/master/conv2d_helpers.py
+    Adopted from: https://github.com/human-analysis/MUXConv/blob/master/conv2d_helpers.py
     """
     def __init__(self, in_channels, out_channels, kernel_size, stride=1,
                  padding=0, dilation=1, groups=1, bias=True):
@@ -102,16 +105,16 @@ class BlockChoi(nn.Module):
 class Frontend_mine(nn.Module):
     """
     
-    # reference Choi et al. recurrent...
+    # see paper Choi et al. recurrent...
     
     Usage example:
 
-    stack_dict = {"list_out_channels":[64,128,128,256,256,646], 
+    front_end_dict = {"list_out_channels":[64,128,128,256,256,646], 
                   "list_kernel_sizes":[(3,3),(3,3),(3,3),(3,3),(3,3),(3,3)],
                   "list_pool_sizes":  [(4,1),(2,2),(2,2),(2,2),(2,2),(2,2)], 
                   "list_avgpool_flags":[False,False,False,False,False,True]}
 
-    conv_stack = ConvStack(stack_dict)
+    conv_stack = ConvStack(front_end_dict)
 
     print(conv_stack)
 
@@ -119,22 +122,22 @@ class Frontend_mine(nn.Module):
 
     print(conv_stack(torch.rand((32,1,128,1000))).shape)
     """
-    def __init__(self,stack_dict,in_channels=1):
+    def __init__(self,front_end_dict,in_channels=1):
         super(Frontend_mine, self).__init__()
         
         #self.version = version
-        self.depth = len(stack_dict["list_out_channels"])
+        self.depth = len(front_end_dict["list_out_channels"])
         self.freq_bn = nn.BatchNorm2d(1)
 
         # set class attributes in a for loop
         for i in range(self.depth):
             setattr(self, 
                     f"conv_block{i+1}", 
-                    BlockChoi(in_channels if i==0 else stack_dict["list_out_channels"][i-1],
-                              stack_dict["list_out_channels"][i],
-                              stack_dict["list_kernel_sizes"][i],
-                              stack_dict["list_pool_sizes"][i],
-                              stack_dict["list_avgpool_flags"][i]))
+                    BlockChoi(in_channels if i==0 else front_end_dict["list_out_channels"][i-1],
+                              front_end_dict["list_out_channels"][i],
+                              front_end_dict["list_kernel_sizes"][i],
+                              front_end_dict["list_pool_sizes"][i],
+                              front_end_dict["list_avgpool_flags"][i]))
     
     def forward(self, inputs):
         
@@ -158,6 +161,7 @@ class Frontend_mine(nn.Module):
         return x
     
 class Frontend_won(nn.Module):
+    # Code adopted from https://github.com/minzwon/sota-music-tagging-models/
     '''
     Won et al. 2019
     Toward interpretable music tagging with self-attention.

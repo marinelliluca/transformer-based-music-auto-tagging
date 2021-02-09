@@ -4,47 +4,46 @@ import torch
 import torch.nn as nn
 import numpy as np
 
-from .bert_modules import BertConfig, BertEncoder, BertPooler
+from bert_modules import BertConfig, BertEncoder, BertPooler
 
 class Backend(nn.Module):
     '''
-    Won et al. 2019
-    Toward interpretable music tagging with self-attention.
-    Temporal summary with Transformer encoder.
+    Modified from https://github.com/minzwon/sota-music-tagging-models/
     '''
-    def __init__(self,
-                 front_end_channels=256,
-                 recurrent=False,
-                 n_class=50):
+    def __init__(self,backend_dict, bert_config = None):
         super(Backend, self).__init__()
 
         
-        self._front_end_channels = front_end_channels
+        self._front_end_channels = backend_dict["front_end_channels"]
         
-        self.recurrent = recurrent
+        self.recurrent = backend_dict["recurrent"]
         
-        if recurrent:
-            self.seq2seq = nn.GRU(front_end_channels, 
-                                  front_end_channels, 
-                                  2, 
+        self.seq2seq = None
+        
+        # seq2seq for position encoding
+        if backend_dict["recurrent_units"] is not None:
+            self.seq2seq = nn.GRU(backend_dict["front_end_channels"], 
+                                  backend_dict["front_end_channels"], 
+                                  backend_dict["recurrent_units"], 
                                   batch_first=True) # input and output = (batch, seq, feature)
-
             
         # Transformer encoder
-        bert_config = BertConfig(hidden_size=front_end_channels,
-                                 num_hidden_layers=2,
-                                 num_attention_heads=8,
-                                 intermediate_size=1024,
-                                 hidden_dropout_prob=0.4,
-                                 attention_probs_dropout_prob=0.5)
+        if bert_config is None:
+            bert_config = BertConfig(hidden_size=backend_dict["front_end_channels"],
+                                     num_hidden_layers=2,
+                                     num_attention_heads=8,
+                                     intermediate_size=1024,
+                                     hidden_dropout_prob=0.4,
+                                     attention_probs_dropout_prob=0.5)
+        
         self.encoder = BertEncoder(bert_config)
         self.pooler = BertPooler(bert_config, activation=nn.ELU())
         self.vec_cls = self.get_cls()
-
+        
         # Dense
         self.dropout = nn.Dropout(0.5)
-        self.dense = nn.Linear(front_end_channels, n_class)
-
+        self.dense = nn.Linear(backend_dict["front_end_channels"], backend_dict["n_class"])
+        
     def get_cls(self,):
         # insert always the same token as a reference for the classification
         np.random.seed(0)
@@ -63,8 +62,8 @@ class Backend(nn.Module):
         
         x = x.permute(0, 2, 1) # (Batch,Sequence,Features)
         
-        if self.recurrent:
-        # Tentative positional encoding
+        # positional encoding
+        if self.seq2seq is not None:
             x,_ = self.seq2seq(x)
         
         # Get [CLS] token
