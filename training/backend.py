@@ -8,7 +8,7 @@ from .bert_modules import BertConfig, BertEncoder, BertPooler
 
 class Backend(nn.Module):
     '''
-    Modified from https://github.com/minzwon/sota-music-tagging-models/
+    Heavily modified from https://github.com/minzwon/sota-music-tagging-models/
     '''
     def __init__(self,backend_dict, 
                  bert_config = None):
