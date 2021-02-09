@@ -18,8 +18,6 @@ class Backend(nn.Module):
         
         self.recurrent = backend_dict["recurrent"]
         
-        self.seq2seq = None
-        
         # seq2seq for position encoding
         if backend_dict["recurrent_units"] is not None:
             self.seq2seq = nn.GRU(backend_dict["front_end_channels"], 
