@@ -14,20 +14,20 @@ class Backend(nn.Module):
         super(Backend, self).__init__()
 
         
-        self._front_end_channels = backend_dict["front_end_channels"]
+        self._frontend_channels = backend_dict["frontend_channels"]
         
         self.recurrent = backend_dict["recurrent"]
         
         # seq2seq for position encoding
         if backend_dict["recurrent_units"] is not None:
-            self.seq2seq = nn.GRU(backend_dict["front_end_channels"], 
-                                  backend_dict["front_end_channels"], 
+            self.seq2seq = nn.GRU(backend_dict["frontend_channels"], 
+                                  backend_dict["frontend_channels"], 
                                   backend_dict["recurrent_units"], 
                                   batch_first=True) # input and output = (batch, seq, feature)
             
         # Transformer encoder
         if bert_config is None:
-            bert_config = BertConfig(hidden_size=backend_dict["front_end_channels"],
+            bert_config = BertConfig(hidden_size=backend_dict["frontend_channels"],
                                      num_hidden_layers=2,
                                      num_attention_heads=8,
                                      intermediate_size=1024,
@@ -40,12 +40,12 @@ class Backend(nn.Module):
         
         # Dense
         self.dropout = nn.Dropout(0.5)
-        self.dense = nn.Linear(backend_dict["front_end_channels"], backend_dict["n_class"])
+        self.dense = nn.Linear(backend_dict["frontend_channels"], backend_dict["n_class"])
         
     def get_cls(self,):
         # insert always the same token as a reference for the classification
         np.random.seed(0)
-        single_cls = torch.Tensor(np.random.random((1, self._front_end_channels)))
+        single_cls = torch.Tensor(np.random.random((1, self._frontend_channels)))
         vec_cls = torch.cat([single_cls for _ in range(64)], dim=0)
         vec_cls = vec_cls.unsqueeze(1)
         return vec_cls
