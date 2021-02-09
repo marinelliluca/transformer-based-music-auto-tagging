@@ -4,20 +4,18 @@ import torch
 import torch.nn as nn
 import numpy as np
 
-from bert_modules import BertConfig, BertEncoder, BertPooler
+from .bert_modules import BertConfig, BertEncoder, BertPooler
 
 class Backend(nn.Module):
     '''
     Modified from https://github.com/minzwon/sota-music-tagging-models/
     '''
     def __init__(self,backend_dict, 
-                 bert_config = None,
-                 max_batch_size = 64):
+                 bert_config = None):
         super(Backend, self).__init__()
 
         
         self.frontend_channels = backend_dict["frontend_channels"]
-        self.max_batch_size = max_batch_size
         
         self.recurrent = backend_dict["recurrent"]
         
@@ -39,23 +37,22 @@ class Backend(nn.Module):
         
         self.encoder = BertEncoder(bert_config)
         self.pooler = BertPooler(bert_config, activation=nn.ELU())
-        self.vec_cls = self.get_cls()
+        self.single_cls = self.get_cls()
         
         # Dense
         self.dropout = nn.Dropout(0.5)
         self.dense = nn.Linear(backend_dict["frontend_channels"], backend_dict["n_class"])
         
     def get_cls(self,):
-        # insert always the same token as a reference for classification
-        torch.manual_seed(42)
+        torch.manual_seed(42) # for reproducibility
         single_cls = torch.rand((1, self.frontend_channels))
-        vec_cls = single_cls.repeat(self.max_batch_size,1,1)
-        return vec_cls
+        return single_cls
 
     def append_cls(self, x):
-        part_vec_cls = self.vec_cls[:x.shape[0]].clone()
-        part_vec_cls = part_vec_cls.to(x.device)
-        return torch.cat([part_vec_cls, x], dim=1)
+        # insert always the same token as a reference for classification
+        vec_cls = self.single_cls.repeat(x.shape[0],1,1) # batch_size = x.shape[0]
+        vec_cls = vec_cls.to(x.device)
+        return torch.cat([vec_cls, x], dim=1)
 
     def forward(self, x):
         
@@ -66,9 +63,6 @@ class Backend(nn.Module):
             x,_ = self.seq2seq(x)
         
         # Get [CLS] token
-        if x.shape[0] > self.max_batch_size:
-            raise Exception(f"Input's batch size={x.shape[0]} > max_batch_size={self.max_batch_size}"+
-                            ", reinitialize with new max_batch_size to solve.")
         x = self.append_cls(x)
 
         # Transformer encoder

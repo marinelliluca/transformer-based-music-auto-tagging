@@ -80,7 +80,7 @@ class AudioFolder(data.Dataset):
         
         upper_idx = math.floor(29*self.fs/self.hop)-self.input_length
         random_idx = np.random.randint(0, high = upper_idx)
-        spec = spec[:, random_idx:random_idx+self.input_length][np.newaxis,:]
+        spec = spec[:, random_idx:random_idx+self.input_length][np.newaxis]
 
         tag_binary = self.tags[fn].astype(int).reshape(50)
         return spec, tag_binary
