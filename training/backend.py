@@ -10,11 +10,14 @@ class Backend(nn.Module):
     '''
     Modified from https://github.com/minzwon/sota-music-tagging-models/
     '''
-    def __init__(self,backend_dict, bert_config = None):
+    def __init__(self,backend_dict, 
+                 bert_config = None,
+                 max_batch_size = 64):
         super(Backend, self).__init__()
 
         
-        self._frontend_channels = backend_dict["frontend_channels"]
+        self.frontend_channels = backend_dict["frontend_channels"]
+        self.max_batch_size = max_batch_size
         
         self.recurrent = backend_dict["recurrent"]
         
@@ -43,16 +46,14 @@ class Backend(nn.Module):
         self.dense = nn.Linear(backend_dict["frontend_channels"], backend_dict["n_class"])
         
     def get_cls(self,):
-        # insert always the same token as a reference for the classification
-        np.random.seed(0)
-        single_cls = torch.Tensor(np.random.random((1, self._frontend_channels)))
-        vec_cls = torch.cat([single_cls for _ in range(64)], dim=0)
-        vec_cls = vec_cls.unsqueeze(1)
+        # insert always the same token as a reference for classification
+        torch.manual_seed(42)
+        single_cls = torch.rand((1, self.frontend_channels))
+        vec_cls = single_cls.repeat(self.max_batch_size,1,1)
         return vec_cls
 
     def append_cls(self, x):
-        batch, _, _ = x.size()
-        part_vec_cls = self.vec_cls[:batch].clone()
+        part_vec_cls = self.vec_cls[:x.shape[0]].clone()
         part_vec_cls = part_vec_cls.to(x.device)
         return torch.cat([part_vec_cls, x], dim=1)
 
@@ -65,6 +66,9 @@ class Backend(nn.Module):
             x,_ = self.seq2seq(x)
         
         # Get [CLS] token
+        if x.shape[0] > self.max_batch_size:
+            raise Exception(f"Input's batch size={x.shape[0]} > max_batch_size={self.max_batch_size}"+
+                            ", reinitialize with new max_batch_size to solve.")
         x = self.append_cls(x)
 
         # Transformer encoder
