@@ -59,6 +59,8 @@ class Backend(nn.Module):
         
         # positional encoding
         if self.seq2seq is not None:
+            # see https://discuss.pytorch.org/t/dataparallel-issue-with-flatten-parameter/8282
+            self.seq2seq.flatten_parameters() 
             x,_ = self.seq2seq(x)
         
         # Get [CLS] token
