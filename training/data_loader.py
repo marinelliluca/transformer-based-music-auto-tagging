@@ -14,12 +14,12 @@ class AudioFolder(data.Dataset):
                  spec_path, 
                  audio_path, 
                  path_to_repo,
-                 trval):
+                 mode):
 
         self.spec_path = os.path.expanduser(spec_path)
         self.audio_path = os.path.expanduser(audio_path)
         self.path_to_repo = os.path.expanduser(path_to_repo)
-        self.trval = trval
+        self.mode = mode
         self.fs = 16000
         self.window = 512
         self.hop = 256
@@ -27,9 +27,9 @@ class AudioFolder(data.Dataset):
         self.input_length = math.floor(input_length*self.fs/self.hop)
         self.get_songlist()
         self.idmsd_to_id7d = pkl.load(open(os.path.join(self.path_to_repo,
-                                                        "training/data_loader/msd/MSD_id_to_7D_id.pkl"),'rb'))
+                                                        "training/msd_metadata/MSD_id_to_7D_id.pkl"),'rb'))
         self.tags = pkl.load(open(os.path.join(self.path_to_repo,
-                                               "training/data_loader/msd/msd_id_to_tag_vector.cP"), 'rb'))
+                                               "training/msd_metadata/msd_id_to_tag_vector.cP"), 'rb'))
         
     def __getitem__(self, index):
         spec = None
@@ -43,14 +43,14 @@ class AudioFolder(data.Dataset):
 
     def get_songlist(self):
         train = pkl.load(open(os.path.join(self.path_to_repo,
-                                           "training/data_loader/msd/filtered_list_train.cP"), 'rb'))
-        if self.trval == 'TRAIN':
+                                           "training/msd_metadata/filtered_list_train.cP"), 'rb'))
+        if self.mode == 'train':
             self.fl = train[:201680]
-        elif self.trval == 'VALID':
+        elif self.mode == 'valid':
             self.fl = train[201680:]
-        elif self.trval == 'TEST':
+        elif self.mode == 'test':
             self.fl = pkl.load(open(os.path.join(self.path_to_repo,
-                                                 "training/data_loader/msd/filtered_list_train.cP"), 'rb'))
+                                                 "training/msd_metadata/filtered_list_train.cP"), 'rb'))
             
     def compute_melspectrogram(self, audio_fn):
         with warnings.catch_warnings():
@@ -94,14 +94,16 @@ def get_DataLoader(batch_size=32,
                    spec_path ='/import/c4dm-datasets/rmri_self_att/msd',
                    audio_path='/import/c4dm-03/Databases/songs/',
                    path_to_repo='~/dl4am/',
-                   trval='TRAIN', 
+                   mode='train', 
                    num_workers=20):
+    
     data_loader = data.DataLoader(dataset=AudioFolder(input_length, 
                                                       spec_path, 
                                                       audio_path, 
                                                       path_to_repo, 
-                                                      trval),
+                                                      mode),
                                   batch_size=batch_size,
                                   shuffle=True,
+                                  pin_memory=True, # for CUDA
                                   num_workers=num_workers)
     return data_loader
