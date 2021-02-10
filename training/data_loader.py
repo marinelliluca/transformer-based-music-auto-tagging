@@ -45,9 +45,9 @@ class AudioFolder(data.Dataset):
         train = pkl.load(open(os.path.join(self.path_to_repo,
                                            "training/msd_metadata/filtered_list_train.cP"), 'rb'))
         if self.mode == 'train':
-            self.fl = train[:100] # train[:201680]
+            self.fl = train[:201680] # train[:100] # 
         elif self.mode == 'valid':
-            self.fl = train[200:210] # train[201680:]
+            self.fl = train[201680:] # train[200:210] # 
         elif self.mode == 'test':
             self.fl = pkl.load(open(os.path.join(self.path_to_repo,
                                                  "training/msd_metadata/filtered_list_train.cP"), 'rb'))
