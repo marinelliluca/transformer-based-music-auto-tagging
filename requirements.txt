@@ -1,0 +1,8 @@
+tqdm==4.25.0
+tensorflow==2.4.1
+numpy==1.19.5
+librosa==0.8.0
+torch==1.7.1
+apex==0.9.10dev
+model==0.6.0
+scikit_learn==0.24.1

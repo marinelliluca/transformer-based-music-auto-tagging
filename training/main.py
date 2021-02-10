@@ -173,7 +173,7 @@ class Solver(object):
                     self.writer.add_scalar("train/step_loss", loss.item(), epoch*n_iters_per_epoch + ctr)
 
             # validation
-            roc_auc, pr_auc = self.get_validation_auc()
+            roc_auc, pr_auc = self.validate()
 
             self.writer.add_scalar("val/epoch_rocauc", roc_auc, epoch + 1)
             self.writer.add_scalar("val/epoch_prauc", pr_auc, epoch + 1)
@@ -215,7 +215,7 @@ class Solver(object):
               % (datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
                  datetime.timedelta(seconds=time.time() - start_t)))
 
-    def get_validation_auc(self):
+    def validate(self):
         self.model.eval()
         y_score = []
         y_true = []
