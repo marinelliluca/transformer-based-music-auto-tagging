@@ -20,6 +20,8 @@ from frontend import Frontend_mine, Frontend_won
 from backend import Backend
 from data_loader import get_DataLoader
 
+os.environ["CUDA_VISIBLE_DEVICES"] = "3"
+
 # define here all the parameters
 main_dict = {"frontend_dict":
              {"list_out_channels":[128,128,128,256,256,256], 
@@ -30,7 +32,7 @@ main_dict = {"frontend_dict":
              "backend_dict":
              {"n_class":50,
               "bert_config":None, 
-              "recurrent_units":2}, #  pass None to deactivate
+              "recurrent_units":1}, #  pass None to deactivate
              
              "dataset":'msd',
              "architecture":'crnnsa',
@@ -44,16 +46,6 @@ main_dict = {"frontend_dict":
               "audio_path":'/import/c4dm-03/Databases/songs/',
               "mode":'train', 
               "num_workers":20}}
-
-def get_auc(predictions, groundtruths):
-    predictions = np.array(predictions)
-    groundtruths = np.array(groundtruths)
-
-    roc_aucs  = metrics.roc_auc_score(groundtruths, predictions, average='macro')
-    pr_aucs = metrics.average_precision_score(groundtruths, predictions, average='macro')
-    print('roc_auc: %.4f' % roc_aucs)
-    print('pr_auc: %.4f' % pr_aucs)
-    return roc_aucs, pr_aucs
 
 def to_var(x):
     if torch.cuda.is_available():
@@ -159,7 +151,7 @@ class Solver(object):
             n_iters_per_epoch = len(self.data_loader_train)
             self.model.train()
             for x, y in self.data_loader_train:
-                ctr += 1
+                ctr+=1
 
                 # Forward
                 x = to_var(x)
@@ -225,46 +217,35 @@ class Solver(object):
 
     def get_validation_auc(self):
         self.model.eval()
-        predictions = []
-        groundtruths = []
+        y_score = []
+        y_true = []
         ctr = 0
         for x,y in self.data_loader_val:
-            ctr=1
+            ctr+=1
             # forward
             x = to_var(x)
             out = self.model(x)
             out = out.detach().cpu()
 
-            predictions.append(out)
+            y_score.append(out.numpy())
 
-            groundtruths.append(y)
+            y_true.append(y.detach().numpy())
 
             if ctr % 1000 == 0:
                 print("[%s] Valid Iter [%d/%d] " %
                       (datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
                        _i, len(self.data_loader_val)))
-
-        roc_auc, pr_auc = get_auc(predictions, groundtruths)
+        
+        y_score = np.array(y_score).squeeze()
+        y_true = np.array(y_true).squeeze().astype(int)
+        
+        roc_auc  = metrics.roc_auc_score(y_true, y_score, average='macro')
+        pr_auc = metrics.average_precision_score(y_true, y_score, average='macro')
+        print('roc_auc: %.4f' % roc_auc)
+        print('pr_auc: %.4f' % pr_auc)
         return roc_auc, pr_auc
     
 if __name__ == '__main__':
     solver = Solver(main_dict)
     solver.train()
     
-"""
-
-TO SOLVE:
-
-/homes/lm004/.local/lib/python3.7/site-packages/torch/nn/modules/rnn.py:740: UserWarning: RNN module weights are not part of single contiguous chunk of memory. This means they need to be compacted at every call, possibly greatly increasing memory usage. To compact weights again call flatten_parameters(). (Triggered internally at  /pytorch/aten/src/ATen/native/cudnn/RNN.cpp:775.)
-  self.dropout, self.training, self.bidirectional, self.batch_first)
-Traceback (most recent call last):
-  File "main.py", line 252, in <module>
-    solver.train()
-  File "main.py", line 184, in train
-    roc_auc, pr_auc = self.get_validation_auc()
-  File "main.py", line 247, in get_validation_auc
-    roc_auc, pr_auc = get_auc(predictions, groundtruths)
-  File "main.py", line 49, in get_auc
-    predictions = np.array(predictions)
-ValueError: only one element tensors can be converted to Python scalars
-"""
