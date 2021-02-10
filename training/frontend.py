@@ -127,7 +127,7 @@ class Frontend_mine(nn.Module):
         
         #self.version = version
         self.depth = len(front_end_dict["list_out_channels"])
-        self.time_bn = nn.BatchNorm2d(1)
+        self.freq_bn = nn.BatchNorm2d(1)
 
         # set class attributes in a for loop
         for i in range(self.depth):
@@ -141,10 +141,10 @@ class Frontend_mine(nn.Module):
     
     def forward(self, inputs):
         
-        # bach_norm along the time axis
-        inputs = inputs.permute(3,1,2,0)# (Time,Channel,Freq,Batch)
-        x = self.time_bn(inputs)
-        x = x.permute(3,1,2,0) 
+        # bach_norm along the freq axis
+        inputs = inputs.permute(2,1,0,3)# (Freq,Channel,Batch,Time)
+        x = self.freq_bn(inputs)
+        x = x.permute(2,1,0,3)
         
         x = getattr(self,f"conv_block{1}")(x)
 

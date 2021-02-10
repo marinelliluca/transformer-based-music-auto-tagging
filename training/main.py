@@ -234,7 +234,7 @@ class Solver(object):
             if ctr % 1000 == 0:
                 print("[%s] Valid Iter [%d/%d] " %
                       (datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-                       _i, len(self.data_loader_val)))
+                       ctr, len(self.data_loader_val)))
         
         y_score = np.array(y_score).squeeze()
         y_true = np.array(y_true).squeeze().astype(int)
