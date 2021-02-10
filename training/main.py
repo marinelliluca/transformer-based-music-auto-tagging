@@ -32,7 +32,7 @@ main_dict = {"frontend_dict":
              "backend_dict":
              {"n_class":50,
               "bert_config":None, 
-              "recurrent_units":1}, #  pass None to deactivate
+              "recurrent_units":2}, #  pass None to deactivate
              
              "dataset":'msd',
              "architecture":'crnnsa',
