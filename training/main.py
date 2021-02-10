@@ -156,7 +156,7 @@ class Solver(object):
             # train
             ctr = 0
             drop_counter += 1
-            n_iters_per_epoch = math.ceil(float(len(self.data_loader_train))/self.batch_size)
+            n_iters_per_epoch = len(self.data_loader_train)
             self.model.train()
             for x, y in self.data_loader_train:
                 ctr += 1
@@ -173,10 +173,10 @@ class Solver(object):
                 self.optimizer.step()
 
                 # Log
-                if (ctr % 100) == 0:
+                if ctr % 100 == 0:
                     print("[%s] Epoch [%d/%d] Iter [%d/%d] train loss: %.4f Elapsed: %s" %
                             (datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-                             epoch+1, self.n_epochs, ctr, len(self.data_loader_train), loss.item(),
+                             epoch+1, self.n_epochs, ctr, n_iters_per_epoch, loss.item(),
                              datetime.timedelta(seconds=time.time()-start_t)))
                     self.writer.add_scalar("train/step_loss", loss.item(), epoch*n_iters_per_epoch + ctr)
 
@@ -227,8 +227,9 @@ class Solver(object):
         self.model.eval()
         predictions = []
         groundtruths = []
+        ctr = 0
         for x,y in self.data_loader_val:
-
+            ctr=1
             # forward
             x = to_var(x)
             out = self.model(x)
@@ -238,7 +239,7 @@ class Solver(object):
 
             groundtruths.append(y)
 
-            if _i % 1000 == 0:
+            if ctr % 1000 == 0:
                 print("[%s] Valid Iter [%d/%d] " %
                       (datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
                        _i, len(self.data_loader_val)))
@@ -249,3 +250,21 @@ class Solver(object):
 if __name__ == '__main__':
     solver = Solver(main_dict)
     solver.train()
+    
+"""
+
+TO SOLVE:
+
+/homes/lm004/.local/lib/python3.7/site-packages/torch/nn/modules/rnn.py:740: UserWarning: RNN module weights are not part of single contiguous chunk of memory. This means they need to be compacted at every call, possibly greatly increasing memory usage. To compact weights again call flatten_parameters(). (Triggered internally at  /pytorch/aten/src/ATen/native/cudnn/RNN.cpp:775.)
+  self.dropout, self.training, self.bidirectional, self.batch_first)
+Traceback (most recent call last):
+  File "main.py", line 252, in <module>
+    solver.train()
+  File "main.py", line 184, in train
+    roc_auc, pr_auc = self.get_validation_auc()
+  File "main.py", line 247, in get_validation_auc
+    roc_auc, pr_auc = get_auc(predictions, groundtruths)
+  File "main.py", line 49, in get_auc
+    predictions = np.array(predictions)
+ValueError: only one element tensors can be converted to Python scalars
+"""
