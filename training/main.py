@@ -20,13 +20,13 @@ from frontend import Frontend_mine, Frontend_won
 from backend import Backend
 from data_loader import get_DataLoader
 
-os.environ["CUDA_VISIBLE_DEVICES"] = "3"
+os.environ["CUDA_VISIBLE_DEVICES"] = "2,3"
 
 # define here all the parameters
 main_dict = {"frontend_dict":
              {"list_out_channels":[128,128,128,256,256,256], 
-              "list_kernel_sizes":[(3,3),(3,3),(3,3),(3,3),(3,3),(3,3)],
-              "list_pool_sizes":  [(3,2),(2,2),(2,2),(2,2),(2,2),(2,1)], 
+              "list_kernel_sizes":[(5,5),(5,5),(3,3),(3,3),(3,3),(3,3)],
+              "list_pool_sizes":  [(3,2),(2,2),(2,2),(2,1),(2,1),(2,1)], 
               "list_avgpool_flags":[False,False,False,False,False,True]},
              
              "backend_dict":
@@ -34,9 +34,11 @@ main_dict = {"frontend_dict":
               "bert_config":None, 
               "recurrent_units":2}, #  pass None to deactivate
              
-             "dataset":'msd',
-             "architecture":'crnnsa',
-             "n_epochs":1000,
+             "training_dict":
+             {"dataset":'msd',
+              "architecture":'crnnsa_long',
+              "n_epochs":1000,
+              "learning_rate":1e-4},
              
              "data_loader_dict":
              {"path_to_repo":'~/dl4am/',
@@ -106,13 +108,12 @@ class Solver(object):
         self.window = 512
         self.hop = 256
         self.mel = 96
-        
-        # Batch size
+
+        # Training 
         self.batch_size = main_dict["data_loader_dict"]["batch_size"]
-        # Epochs
-        self.n_epochs = main_dict["n_epochs"]
-        # Learning rate
-        self.initial_lr = 1e-3
+        self.n_epochs = main_dict["training_dict"]["n_epochs"]
+        self.initial_lr = main_dict["training_dict"]["learning_rate"]
+        
         # Model
         self.model = CRNNSA(main_dict)
         if torch.cuda.is_available():
@@ -122,15 +123,15 @@ class Solver(object):
         self.optimizer = torch.optim.Adam(self.model.parameters(), self.initial_lr)       
         # Loss
         self.criterion = nn.BCELoss()
-        # Save path
+        # Model save path
         self.model_save_path = os.path.join(self.path_to_repo,"models")
         os.makedirs(self.model_save_path, exist_ok=True)
     
-        # Tensorboard
+        # Tensorboardtraining_dict
         now = datetime.datetime.now()
         log_dir = os.path.join("./","logs",
-                               main_dict["dataset"],
-                               main_dict["architecture"],
+                               main_dict["training_dict"]["dataset"],
+                               main_dict["training_dict"]["architecture"],
                                now.strftime("%m:%d:%H:%M"))
         os.makedirs(log_dir, exist_ok=True)
         print(f"tensorboard --logdir '{log_dir}' --port ")
@@ -138,7 +139,6 @@ class Solver(object):
 
     def train(self):
 
-        # Start training
         start_t = time.time()
         current_optimizer = 'adam'
         best_roc_auc = 0

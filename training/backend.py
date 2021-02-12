@@ -22,9 +22,11 @@ class Backend(nn.Module):
         if backend_dict["recurrent_units"] is not None:
             self.seq2seq = nn.GRU(self.frontend_out_channels, 
                                   self.frontend_out_channels, 
-                                  backend_dict["recurrent_units"], 
+                                  backend_dict["recurrent_units"],
                                   batch_first=True) # input and output = (batch, seq, feature)
-            
+        
+        self.dropout1 = nn.Dropout(0.1)
+        
         # Transformer encoder
         if bert_config is None:
             bert_config = BertConfig(hidden_size=self.frontend_out_channels,
@@ -35,11 +37,11 @@ class Backend(nn.Module):
                                      attention_probs_dropout_prob=0.5)
         
         self.encoder = BertEncoder(bert_config)
-        self.pooler = BertPooler(bert_config, activation=nn.ELU())
+        self.pooler = BertPooler(bert_config)
         self.single_cls = self.get_cls()
         
         # Dense
-        self.dropout = nn.Dropout(0.5)
+        self.dropout2 = nn.Dropout(0.5)
         self.dense = nn.Linear(self.frontend_out_channels, backend_dict["n_class"])
         
     def get_cls(self,):
@@ -63,6 +65,8 @@ class Backend(nn.Module):
             self.seq2seq.flatten_parameters() 
             x,_ = self.seq2seq(x)
         
+        x = self.dropout1(x)
+        
         # Get [CLS] token
         x = self.append_cls(x)
 
@@ -72,7 +76,7 @@ class Backend(nn.Module):
         x = self.pooler(x)
 
         # Dense
-        x = self.dropout(x)
+        x = self.dropout2(x)
         x = self.dense(x)
         x = nn.Sigmoid()(x)
 

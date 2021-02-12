@@ -86,7 +86,7 @@ class BlockChoi(nn.Module):
         
         self.bn = nn.BatchNorm2d(out_channels)
         
-        self.activation = nn.ELU() 
+        self.activation = nn.ELU() #nn.ELU() 
         
         self.pool = nn.AvgPool2d(pool_size) if avgpool_flag else nn.MaxPool2d(pool_size)
         
@@ -94,7 +94,7 @@ class BlockChoi(nn.Module):
     
     def forward(self, inputs):
         x = self.conv(inputs)
-        # pool before normalize (less GPU computations)
+        # pool before normalize (less computations)
         # https://myrtle.ai/how-to-train-your-resnet-8-bag-of-tricks/
         x = self.pool(x) 
         x = self.bn(x)
@@ -127,7 +127,7 @@ class Frontend_mine(nn.Module):
         
         #self.version = version
         self.depth = len(front_end_dict["list_out_channels"])
-        self.freq_bn = nn.BatchNorm2d(1)
+        self.spec_bn = nn.BatchNorm2d(1)
 
         # set class attributes in a for loop
         for i in range(self.depth):
@@ -141,10 +141,10 @@ class Frontend_mine(nn.Module):
     
     def forward(self, inputs):
         
-        # bach_norm along the freq axis
-        inputs = inputs.permute(2,1,0,3)# (Freq,Channel,Batch,Time)
-        x = self.freq_bn(inputs)
-        x = x.permute(2,1,0,3)
+        
+        #inputs = inputs.permute(3,1,2,0)# (Time,Channel,Freq,Batch)
+        x = self.spec_bn(inputs)
+        #x = x.permute(3,1,2,0)
         
         x = getattr(self,f"conv_block{1}")(x)
 
