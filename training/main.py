@@ -43,7 +43,7 @@ main_dict = {"frontend_dict":
              "data_loader_dict":
              {"path_to_repo":'~/dl4am/',
               "batch_size":32,
-              "input_length":15, # [s]
+              "input_length":10, # [s]
               "spec_path":'/import/c4dm-datasets/rmri_self_att/msd',
               "audio_path":'/import/c4dm-03/Databases/songs/',
               "mode":'train', 
@@ -185,7 +185,7 @@ class Solver(object):
                 torch.save(self.model.state_dict(),
                         os.path.join(self.model_save_path, 'best_model.pth'))
             # change optimizer
-            if current_optimizer == 'adam' and drop_counter == 60:
+            if current_optimizer == 'adam' and drop_counter == 40:
                 self.load = os.path.join(self.model_save_path, 'best_model.pth')
                 self.optimizer = torch.optim.SGD(self.model.parameters(), 
                                                  0.001, 
