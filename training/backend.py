@@ -56,7 +56,7 @@ class Backend(nn.Module):
     def forward(self, x):
 
         # frontend output shape = (batch, features, sequence)
-        # input to self attention (batch, sequence, features)
+        # input to self attention and recurrent unit (batch, sequence, features)
         x = x.permute(0, 2, 1)
         
         # positional encoding
