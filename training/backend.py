@@ -57,15 +57,26 @@ class Backend(nn.Module):
 
     def forward(self, x):
         
-        x = x.permute(0, 2, 1) # (Batch,Sequence,Features)
-        
         # positional encoding
         if self.seq2seq is not None:
+            
             # see https://discuss.pytorch.org/t/dataparallel-issue-with-flatten-parameter/8282
             self.seq2seq.flatten_parameters() 
+            
+            # frontend output shape = (batch, features, sequence)
+            # change to (sequence, batch, features)
+            x = x.permute(2, 0, 1) 
             x,_ = self.seq2seq(x)
-        
+            
+            # change back to (batch, features, sequence)
+            x = x.permute(1, 2, 0) 
+            
+        # dropout
         x = self.dropout1(x)
+        
+        # frontend output shape = (batch, features, sequence)
+        # input to self attention (batch, sequence, features)
+        x = x.permute(0, 2, 1)
         
         # Get [CLS] token
         x = self.append_cls(x)
