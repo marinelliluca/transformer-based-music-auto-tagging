@@ -25,8 +25,6 @@ class Backend(nn.Module):
                                   backend_dict["recurrent_units"],
                                   batch_first=True) # input and output = (batch, seq, feature)
         
-        self.dropout1 = nn.Dropout(0.1)
-        
         # Transformer encoder
         if bert_config is None:
             bert_config = BertConfig(hidden_size=self.frontend_out_channels,
@@ -41,7 +39,7 @@ class Backend(nn.Module):
         self.single_cls = self.get_cls()
         
         # Dense
-        self.dropout2 = nn.Dropout(0.5)
+        self.dropout = nn.Dropout(0.5)
         self.dense = nn.Linear(self.frontend_out_channels, backend_dict["n_class"])
         
     def get_cls(self,):
@@ -67,12 +65,8 @@ class Backend(nn.Module):
             # change to (sequence, batch, features)
             x = x.permute(2, 0, 1) 
             x,_ = self.seq2seq(x)
-            
             # change back to (batch, features, sequence)
             x = x.permute(1, 2, 0) 
-            
-        # dropout
-        x = self.dropout1(x)
         
         # frontend output shape = (batch, features, sequence)
         # input to self attention (batch, sequence, features)
@@ -87,7 +81,7 @@ class Backend(nn.Module):
         x = self.pooler(x)
 
         # Dense
-        x = self.dropout2(x)
+        x = self.dropout(x)
         x = self.dense(x)
         x = nn.Sigmoid()(x)
 
