@@ -43,7 +43,7 @@ main_dict = {"frontend_dict":
              "data_loader_dict":
              {"path_to_repo":'~/dl4am/',
               "batch_size":64,
-              "input_length":10, # [s]
+              "input_length":5, # [s]
               "spec_path":'/import/c4dm-datasets/rmri_self_att/msd',
               "audio_path":'/import/c4dm-03/Databases/songs/',
               "mode":'train', 
