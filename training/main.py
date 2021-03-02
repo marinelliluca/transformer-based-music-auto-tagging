@@ -20,7 +20,7 @@ from frontend import Frontend_mine, Frontend_won
 from backend import Backend
 from data_loader import get_DataLoader
 
-os.environ["CUDA_VISIBLE_DEVICES"] = "2,3"
+os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 
 # define here all the parameters
 main_dict = {"frontend_dict":
@@ -57,12 +57,9 @@ def to_var(x):
 class CRNNSA(nn.Module):
     
     """
-    TODO: explore whether "rec_unit -> self_att -> rec_unit"
-    would have worked better.
+    Convolutional Recurrent Neural Network with Self Attention
     """
     
-    # BERT-based Convolutional Recurrent Neural Network
-    # Code adopted from https://github.com/minzwon/sota-music-tagging-models/
     def __init__(self, main_dict=None, backend=None, frontend=None):
         super(CRNNSA, self).__init__()
         
