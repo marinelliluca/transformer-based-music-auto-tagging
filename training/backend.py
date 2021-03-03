@@ -103,21 +103,37 @@ class Backend2(nn.Module):
         self.multihead_attn = nn.MultiheadAttention(self.frontend_out_channels,
                                                     8) # number of heads
         
+        self.single_cls = self.get_cls()
+        
         # Dense
         self.dropout = nn.Dropout(0.5)
         self.dense = nn.Linear(self.frontend_out_channels, backend_dict["n_class"])
         
+    def get_cls(self,):
+        torch.manual_seed(42) # for reproducibility
+        single_cls = torch.rand((1,self.frontend_out_channels))
+        return single_cls
+
+    def append_cls(self, x):
+        # insert always the same token as a reference for classification
+        vec_cls = self.single_cls.repeat(1,x.shape[1],1) # batch_size = x.shape[1]
+        vec_cls = vec_cls.to(x.device)
+        return torch.cat([vec_cls, x], dim=0)
+        
     def forward(self, x):
 
         # frontend output shape = (batch, features, sequence)
-        # input to self attention and recurrent unit (sequence, batch, features)
+        # input to multihead attention and recurrent unit (sequence, batch, features)
         x = x.permute(2,0,1)
         
         # see https://discuss.pytorch.org/t/dataparallel-issue-with-flatten-parameter/8282
         self.seq2seq.flatten_parameters() 
         outputs,hidden = self.seq2seq(x)  
         
-        hidden = hidden[-1] #take just the hidden state of the last recurrent layer
+        hidden = hidden[-1] #take just the hidden state of the last recurrent unit
+        
+        # Get [CLS] token
+        outputs = self.append_cls(outputs)
 
         #x, attn_output_weights = self.multihead_attn(hidden, outputs, outputs) # (Q,K,V)
         
