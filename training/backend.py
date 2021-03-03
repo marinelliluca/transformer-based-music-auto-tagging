@@ -70,9 +70,9 @@ class Backend(nn.Module):
         x = self.append_cls(x)
 
         # Transformer encoder
-        _,x = self.encoder(x)
+        _,hidden_state = self.encoder(x)
 
-        x = self.pooler(x)
+        x = self.pooler(hidden_state)
 
         # Dense
         x = self.dropout(x)
@@ -80,3 +80,56 @@ class Backend(nn.Module):
         x = nn.Sigmoid()(x)
 
         return x
+
+    
+    
+#########
+" TRIAL "
+#########
+
+class Backend2(nn.Module):
+
+    def __init__(self,main_dict, 
+                 bert_config = None):
+        super(Backend2, self).__init__()
+
+        backend_dict = main_dict["backend_dict"]
+        self.frontend_out_channels = main_dict["frontend_dict"]["list_out_channels"][-1]
+        
+        self.seq2seq = nn.GRU(self.frontend_out_channels, 
+                              self.frontend_out_channels, 
+                              backend_dict["recurrent_units"]) # input and output = (seq_len, batch, input_size)
+        
+        self.multihead_attn = nn.MultiheadAttention(self.frontend_out_channels,
+                                                    8) # number of heads
+        
+        # Dense
+        self.dropout = nn.Dropout(0.5)
+        self.dense = nn.Linear(self.frontend_out_channels, backend_dict["n_class"])
+        
+    def forward(self, x):
+
+        # frontend output shape = (batch, features, sequence)
+        # input to self attention and recurrent unit (sequence, batch, features)
+        x = x.permute(2,0,1)
+        
+        # see https://discuss.pytorch.org/t/dataparallel-issue-with-flatten-parameter/8282
+        self.seq2seq.flatten_parameters() 
+        outputs,hidden = self.seq2seq(x)  
+        
+        hidden = hidden[-1] #take just the hidden state of the last recurrent layer
+
+        #x, attn_output_weights = self.multihead_attn(hidden, outputs, outputs) # (Q,K,V)
+        
+        x, _ = self.multihead_attn(hidden.unsqueeze(0), 
+                                   outputs, 
+                                   outputs) # (Q,K,V)
+        
+        # Dense
+        x = self.dropout(x.squeeze())
+        x = self.dense(x)
+        x = nn.Sigmoid()(x)
+
+        return x
+
+

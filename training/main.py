@@ -17,7 +17,7 @@ from torch.autograd import Variable
 from torch.utils.tensorboard import SummaryWriter
 
 from frontend import Frontend_mine, Frontend_won
-from backend import Backend
+from backend import Backend, Backend2
 from data_loader import get_DataLoader
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "1"
@@ -32,11 +32,11 @@ main_dict = {"frontend_dict":
              "backend_dict":
              {"n_class":50,
               "bert_config":None, 
-              "recurrent_units":2}, #  pass None to deactivate
+              "recurrent_units":1}, #  pass None to deactivate
              
              "training_dict":
              {"dataset":'msd',
-              "architecture":'crnnsa_long',
+              "architecture":'crnnsa_5s',
               "n_epochs":1000,
               "learning_rate":1e-4},
              
@@ -66,7 +66,7 @@ class CRNNSA(nn.Module):
 
         if main_dict is not None:
             self.frontend = Frontend_mine(main_dict["frontend_dict"])
-            self.backend = Backend(main_dict)
+            self.backend = Backend2(main_dict)
         else:
             self.frontend = frontend
             self.backend = backend
