@@ -9,6 +9,9 @@ __pycache__/
 # Training logs
 training/logs
 
+# Models (upload manually the final one)
+models/
+
 # Distribution / packaging
 .Python
 build/
