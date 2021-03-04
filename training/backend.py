@@ -100,11 +100,6 @@ class Backend2(nn.Module):
                               self.frontend_out_channels, 
                               backend_dict["recurrent_units"]) # input and output = (seq_len, batch, input_size)
         
-        """
-        self.multihead_attn = nn.MultiheadAttention(self.frontend_out_channels,
-                                                    8) # number of heads
-        """
-        
         self.encoder = nn.TransformerEncoderLayer(self.frontend_out_channels,
                                                   8) # number of heads
         
@@ -133,23 +128,14 @@ class Backend2(nn.Module):
         
         # see https://discuss.pytorch.org/t/dataparallel-issue-with-flatten-parameter/8282
         self.seq2seq.flatten_parameters() 
-        seq,hidden = self.seq2seq(seq)  
-        hidden = hidden[-1] #take just the hidden state of the last recurrent unit
+        seq,_ = self.seq2seq(seq)
         
         # Attention
         seq = self.append_cls(seq)        
-        """
-        #x, attn_output_weights = self.multihead_attn(hidden, seq, seq) # (Q,K,V)
-        x, _ = self.multihead_attn(hidden.unsqueeze(0), 
-                                   seq, 
-                                   seq) # (Q,K,V)
-        """
         seq = self.encoder(seq)
         
         # Pool by taking the first token
         x = seq[0,:,:]
-        
-        
         
         # Dense
         x = self.dropout(x.squeeze())
@@ -157,15 +143,3 @@ class Backend2(nn.Module):
         x = nn.Sigmoid()(x)
 
         return x
-
-
-# How to pool multihead attn
-""""
-self.dense = nn.Linear(config.hidden_size, config.hidden_size)
-
-# We "pool" the model by simply taking the hidden state corresponding
-# to the first token.
-first_token_tensor = hidden_states[:, 0]
-pooled_output = self.dense(first_token_tensor)
-pooled_output = self.activation(pooled_output)
-"""
