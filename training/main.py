@@ -134,6 +134,10 @@ class Solver(object):
         print(f"tensorboard --logdir '{log_dir}' --port ")
         self.writer = SummaryWriter(log_dir)
 
+    def load(self, filename):
+        S = torch.load(filename)
+        self.model.load_state_dict(S)
+
     def train(self):
 
         start_t = time.time()
@@ -183,7 +187,7 @@ class Solver(object):
                         os.path.join(self.model_save_path, 'best_model.pth'))
             # change optimizer
             if current_optimizer == 'adam' and drop_counter == 40:
-                self.load = os.path.join(self.model_save_path, 'best_model.pth')
+                self.load(os.path.join(self.model_save_path, 'best_model.pth'))
                 self.optimizer = torch.optim.SGD(self.model.parameters(), 
                                                  0.001, 
                                                  momentum=0.9, 
@@ -194,7 +198,7 @@ class Solver(object):
                 print('sgd 1e-3')
             # first drop
             if current_optimizer == 'sgd_1' and drop_counter == 20:
-                self.load = os.path.join(self.model_save_path, 'best_model.pth')
+                self.load(os.path.join(self.model_save_path, 'best_model.pth'))
                 for pg in self.optimizer.param_groups:
                     pg['lr'] = 0.0001
                 current_optimizer = 'sgd_2'
@@ -202,7 +206,7 @@ class Solver(object):
                 print('sgd 1e-4')
             # second drop
             if current_optimizer == 'sgd_2' and drop_counter == 20:
-                self.load = os.path.join(self.model_save_path, 'best_model.pth')
+                self.load(os.path.join(self.model_save_path, 'best_model.pth'))
                 for pg in self.optimizer.param_groups:
                     pg['lr'] = 0.00001
                 current_optimizer = 'sgd_3'

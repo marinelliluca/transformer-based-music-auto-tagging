@@ -133,7 +133,6 @@ class Backend2(nn.Module):
         # Attention
         seq = self.append_cls(seq)        
         seq = self.encoder(seq)
-        
         # Pool by taking the first token
         x = seq[0,:,:]
         
