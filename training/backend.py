@@ -129,17 +129,15 @@ class Backend2(nn.Module):
         # see https://discuss.pytorch.org/t/dataparallel-issue-with-flatten-parameter/8282
         self.seq2seq.flatten_parameters() 
         outputs,hidden = self.seq2seq(x)  
-        
         hidden = hidden[-1] #take just the hidden state of the last recurrent unit
         
-        # Get [CLS] token
+        # Attention
         outputs = self.append_cls(outputs)
-
         #x, attn_output_weights = self.multihead_attn(hidden, outputs, outputs) # (Q,K,V)
-        
         x, _ = self.multihead_attn(hidden.unsqueeze(0), 
                                    outputs, 
-                                   outputs) # (Q,K,V)
+                                   outputs) # (Q,K,V)        
+        x = nn.Sigmoid()(x)
         
         # Dense
         x = self.dropout(x.squeeze())
@@ -149,3 +147,13 @@ class Backend2(nn.Module):
         return x
 
 
+# How to pool multihead attn
+""""
+self.dense = nn.Linear(config.hidden_size, config.hidden_size)
+
+# We "pool" the model by simply taking the hidden state corresponding
+# to the first token.
+first_token_tensor = hidden_states[:, 0]
+pooled_output = self.dense(first_token_tensor)
+pooled_output = self.activation(pooled_output)
+"""
