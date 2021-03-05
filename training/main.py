@@ -24,15 +24,15 @@ os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 
 # define here all the parameters
 main_dict = {"frontend_dict":
-             {"list_out_channels":[128,128,128,256,256,256], 
-              "list_kernel_sizes":[(5,5),(5,5),(3,3),(3,3),(3,3),(3,3)],
+             {"list_out_channels":[128,128,256,256,256,256], 
+              "list_kernel_sizes":[(3,3),(3,3),(3,3),(3,3),(3,3),(3,3)],
               "list_pool_sizes":  [(3,2),(2,2),(2,2),(2,1),(2,1),(2,1)], 
               "list_avgpool_flags":[False,False,False,False,False,True]},
              
              "backend_dict":
              {"n_class":50,
               "bert_config":None, 
-              "recurrent_units":1}, #  pass recurrent_units = None to deactivate
+              "recurrent_units":2}, #  pass recurrent_units = None to deactivate
              
              "training_dict":
              {"dataset":'msd',
