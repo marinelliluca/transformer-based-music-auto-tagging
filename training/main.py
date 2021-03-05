@@ -32,7 +32,7 @@ main_dict = {"frontend_dict":
              "backend_dict":
              {"n_class":50,
               "bert_config":None, 
-              "recurrent_units":1}, #  pass None to deactivate
+              "recurrent_units":1}, #  pass recurrent_units = None to deactivate
              
              "training_dict":
              {"dataset":'msd',
@@ -138,53 +138,13 @@ class Solver(object):
         S = torch.load(filename)
         self.model.load_state_dict(S)
 
-    def train(self):
+    def train(self, drop_counter=0, best_roc_auc=0):
 
         start_t = time.time()
         current_optimizer = 'adam'
-        best_roc_auc = 0
-        drop_counter = 0
-        
-        for epoch in range(self.n_epochs):
-            # train
-            ctr = 0
-            drop_counter += 1
-            n_iters_per_epoch = len(self.data_loader_train)
-            self.model.train()
-            for x, y in self.data_loader_train:
-                ctr+=1
-
-                # Forward
-                x = to_var(x)
-                y = to_var(y)
-                out = self.model(x)
-
-                # Backward
-                loss = self.criterion(out, y)
-                self.optimizer.zero_grad()
-                loss.backward()
-                self.optimizer.step()
-
-                # Log
-                if ctr % 100 == 0:
-                    print("[%s] Epoch [%d/%d] Iter [%d/%d] train loss: %.4f Elapsed: %s" %
-                            (datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-                             epoch+1, self.n_epochs, ctr, n_iters_per_epoch, loss.item(),
-                             datetime.timedelta(seconds=time.time()-start_t)))
-                    self.writer.add_scalar("train/step_loss", loss.item(), epoch*n_iters_per_epoch + ctr)
-
-            # validation
-            roc_auc, pr_auc = self.validate()
-
-            self.writer.add_scalar("val/epoch_rocauc", roc_auc, epoch + 1)
-            self.writer.add_scalar("val/epoch_prauc", pr_auc, epoch + 1)
                 
-            # save model
-            if roc_auc > best_roc_auc:
-                print('best model: %4f' % roc_auc)
-                best_roc_auc = roc_auc
-                torch.save(self.model.state_dict(),
-                        os.path.join(self.model_save_path, 'best_model.pth'))
+        for epoch in range(self.n_epochs):
+
             # change optimizer
             if current_optimizer == 'adam' and drop_counter == 40:
                 self.load(os.path.join(self.model_save_path, 'best_model.pth'))
@@ -211,10 +171,47 @@ class Solver(object):
                     pg['lr'] = 0.00001
                 current_optimizer = 'sgd_3'
                 print('sgd 1e-5')
+            
+            # train
+            ctr = 0
+            n_iters_per_epoch = len(self.data_loader_train)
+            self.model.train()
+            for x, y in self.data_loader_train:
+                ctr+=1
 
-        print("[%s] Train finished. Elapsed: %s"
-              % (datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-                 datetime.timedelta(seconds=time.time() - start_t)))
+                # Forward
+                x = to_var(x)
+                y = to_var(y)
+                out = self.model(x)
+
+                # Backward
+                loss = self.criterion(out, y)
+                self.optimizer.zero_grad()
+                loss.backward()
+                self.optimizer.step()
+
+                # Log
+                if ctr % 100 == 0:
+                    print("[%s] Epoch [%d/%d] Iter [%d/%d] train loss: %.4f Elapsed: %s" %
+                            (datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+                             epoch+1, self.n_epochs, ctr, n_iters_per_epoch, loss.item(),
+                             datetime.timedelta(seconds=time.time()-start_t)))
+                    self.writer.add_scalar("train/step_loss", loss.item(), epoch*n_iters_per_epoch + ctr)
+
+            # validation
+            roc_auc, pr_auc = self.validate()
+            self.writer.add_scalar("val/epoch_rocauc", roc_auc, epoch + 1)
+            self.writer.add_scalar("val/epoch_prauc", pr_auc, epoch + 1)
+                
+            # save model
+            if roc_auc > best_roc_auc:
+                print('best model: %4f' % roc_auc)
+                best_roc_auc = roc_auc
+                torch.save(self.model.state_dict(), os.path.join(self.model_save_path, 'best_model.pth'))
+            
+            # update drop_counter
+            drop_counter += 1
+
 
     def validate(self):
         self.model.eval()
@@ -248,5 +245,5 @@ class Solver(object):
     
 if __name__ == '__main__':
     solver = Solver(main_dict)
+    #solver.train(drop_counter=40, best_roc_auc=0.8736) # pass nothing to start a new session
     solver.train()
-    
