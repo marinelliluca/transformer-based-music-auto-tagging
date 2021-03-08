@@ -100,8 +100,8 @@ class Backend2(nn.Module):
                               self.frontend_out_channels, 
                               backend_dict["recurrent_units"]) # input and output = (seq_len, batch, input_size)
         
-        self.encoder = nn.TransformerEncoderLayer(self.frontend_out_channels,
-                                                  8) # number of heads
+        self.transformer_encoder = nn.TransformerEncoder(nn.TransformerEncoderLayer(self.frontend_out_channels,8), 
+                                                         num_layers=2)
         
         self.single_cls = self.get_cls()
         
@@ -134,7 +134,7 @@ class Backend2(nn.Module):
         
         # Attention
         seq = self.append_cls(seq)        
-        seq = self.encoder(seq)
+        seq = self.transformer_encoder(seq)
         # Pool by taking the first token
         x = seq[0,:,:]
         
