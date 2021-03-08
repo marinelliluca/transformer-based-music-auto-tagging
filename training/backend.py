@@ -105,9 +105,11 @@ class Backend2(nn.Module):
         
         self.single_cls = self.get_cls()
         
+        self.dense1 = nn.Linear(self.frontend_out_channels, self.frontend_out_channels)
+        
         # Dense
         self.dropout = nn.Dropout(0.5)
-        self.dense = nn.Linear(self.frontend_out_channels, backend_dict["n_class"])
+        self.dense2 = nn.Linear(self.frontend_out_channels, backend_dict["n_class"])
         
     def get_cls(self,):
         torch.manual_seed(42) # for reproducibility
@@ -136,9 +138,12 @@ class Backend2(nn.Module):
         # Pool by taking the first token
         x = seq[0,:,:]
         
+        x = self.dense1(x)
+        x = nn.ReLU()(x)
+        
         # Dense
         x = self.dropout(x.squeeze())
-        x = self.dense(x)
+        x = self.dense2(x)
         x = nn.Sigmoid()(x)
 
         return x

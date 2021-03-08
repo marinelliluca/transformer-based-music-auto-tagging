@@ -161,12 +161,9 @@ class Frontend_mine(nn.Module):
         return x
     
 class Frontend_won(nn.Module):
+    
     # Code adopted from https://github.com/minzwon/sota-music-tagging-models/
-    '''
-    Won et al. 2019
-    Toward interpretable music tagging with self-attention.
-    Feature extraction with CNN (from a cited paper, MusicCNN or something like that)
-    '''
+
     def __init__(self,
                  n_channels=128):
         super(Frontend_won, self).__init__()
