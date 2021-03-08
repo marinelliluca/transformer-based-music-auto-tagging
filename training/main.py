@@ -20,7 +20,8 @@ from frontend import Frontend_mine, Frontend_won
 from backend import Backend, Backend2
 from data_loader import get_DataLoader
 
-os.environ["CUDA_VISIBLE_DEVICES"] = "1"
+os.environ["NVIDIA_VISIBLE_DEVICES"] = "1"
+os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
 # define here all the parameters
 main_dict = {"frontend_dict":
