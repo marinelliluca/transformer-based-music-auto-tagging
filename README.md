@@ -1,2 +1,2 @@
-# dl4am
-Deep Learning for Audio and Music 
+# SACRNN
+Self-attentive convolutional recurrent neural network for music auto-tagging
