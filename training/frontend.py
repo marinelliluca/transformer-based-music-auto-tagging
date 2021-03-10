@@ -141,10 +141,9 @@ class Frontend_mine(nn.Module):
     
     def forward(self, inputs):
         
+        #inputs shape = (Batch,Channel,Freq,Time)
         
-        #inputs = inputs.permute(3,1,2,0)# (Time,Channel,Freq,Batch)
-        x = self.spec_bn(inputs)
-        #x = x.permute(3,1,2,0)
+        x = self.spec_bn(inputs) # 
         
         x = getattr(self,f"conv_block{1}")(x)
 
