@@ -23,6 +23,9 @@ from data_loader import get_DataLoader
 os.environ["NVIDIA_VISIBLE_DEVICES"] = "1"
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
+import torch.multiprocessing
+torch.multiprocessing.set_sharing_strategy('file_system')
+
 # define here all the parameters
 main_dict = {"frontend_dict":
              {"list_out_channels":[128,128,256,256,256,256], 
@@ -66,7 +69,7 @@ class CRNNSA(nn.Module):
         
 
         if main_dict is not None:
-            self.frontend = Frontend_won() #Frontend_mine(main_dict["frontend_dict"])
+            self.frontend = Frontend_mine(main_dict["frontend_dict"]) #Frontend_won() #
             self.backend = Backend2(main_dict)
         else:
             self.frontend = frontend
@@ -118,14 +121,16 @@ class MainWrapper(object):
             self.model.cuda()
         self.model = torch.nn.DataParallel(self.model)
         # Optimizer
-        self.optimizer = torch.optim.Adam(self.model.parameters(), self.initial_lr)       
+        """see https://www.fast.ai/2018/07/02/adam-weight-decay/"""
+        self.optimizer = torch.optim.AdamW(self.model.parameters(), self.initial_lr)
+        
         # Loss
         self.criterion = nn.BCELoss()
         # Model save path
         self.model_save_path = os.path.join(self.path_to_repo,"models")
         os.makedirs(self.model_save_path, exist_ok=True)
     
-        # Tensorboardtraining_dict
+        # Tensorboard
         now = datetime.datetime.now()
         log_dir = os.path.join("./","logs",
                                main_dict["training_dict"]["dataset"],
