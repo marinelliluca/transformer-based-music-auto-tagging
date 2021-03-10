@@ -79,7 +79,7 @@ class CRNNSA(nn.Module):
         
         return x
 
-class Solver(object):
+class MainWrapper(object):
     def __init__(self, main_dict):
         
         # Data loader
@@ -221,12 +221,18 @@ class Solver(object):
         ctr = 0
         for x,y in self.data_loader_val:
             ctr+=1
+            
+            # NB: in validation mode the output of the DataLoader
+            # has a shape of (1,n_chunks,F,T), where n_chunks = total time frames // input_length
+            x = x.permute(1,0,2,3) 
+            # by permuting it here we are treating n_chunks as the batch_size
+            
             # forward
             x = to_var(x)
             out = self.model(x)
             out = out.detach().cpu()
 
-            y_score.append(out.numpy())
+            y_score.append(out.numpy().mean(axis=0))
 
             y_true.append(y.detach().numpy())
 
@@ -245,6 +251,6 @@ class Solver(object):
         return roc_auc, pr_auc
     
 if __name__ == '__main__':
-    solver = Solver(main_dict)
-    #solver.train(drop_counter=40, best_roc_auc=0.8736) # pass nothing to start a new session
-    solver.train()
+    wrapper = MainWrapper(main_dict)
+    #wrapper.train(drop_counter=40, best_roc_auc=0.8736) # pass nothing to start a new session
+    wrapper.train()

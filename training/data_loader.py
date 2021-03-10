@@ -32,13 +32,15 @@ class AudioFolder(data.Dataset):
                                                "training/msd_metadata/msd_id_to_tag_vector.cP"), 'rb'))
         
     def __getitem__(self, index):
+
         spec = None
         while spec is None:
             try:
                 spec, tag_binary = self.get_spec(index)
-            except: # audio not found or broken (very rare)
+            except: # audio not found or broken (very very rare)
                 index = np.random.randint(0,high=len(self.fl))
                 spec = None
+
         return spec.astype('float32'), tag_binary.astype('float32')
 
     def get_songlist(self):
@@ -71,16 +73,24 @@ class AudioFolder(data.Dataset):
         spec_fn = os.path.join(self.spec_path,*id7d[:2], id7d+'.npy') 
         
         if not os.path.exists(spec_fn):
-            spec = self.compute_melspectrogram(audio_fn)
+            whole_spec = self.compute_melspectrogram(audio_fn)
             spec_path = os.path.dirname(spec_fn)
             os.makedirs(spec_path)
             np.save(open(spec_fn, 'wb'), spec)
         else:
-            spec = np.load(spec_fn, mmap_mode='r')
+            whole_spec = np.load(spec_fn, mmap_mode='r')
         
-        upper_idx = math.floor(29*self.fs/self.hop)-self.input_length
-        random_idx = np.random.randint(0, high = upper_idx)
-        spec = spec[:, random_idx:random_idx+self.input_length][np.newaxis]
+        if self.mode=='train':
+            upper_idx = math.floor(29*self.fs/self.hop)-self.input_length
+            random_idx = np.random.randint(0, high = upper_idx)
+            spec = whole_spec[:, random_idx:random_idx+self.input_length][np.newaxis]
+            
+        elif self.mode=='valid' or self.mode=='test':
+            # pass all song chunks
+            n_chunks = whole_spec.shape[1] // self.input_length
+            spec = np.zeros((n_chunks,whole_spec.shape[0],self.input_length)) # stack of chunks
+            for i in range(n_chunks):
+                spec[i]=whole_spec[:,i*self.input_length:(i+1)*self.input_length]
 
         tag_binary = self.tags[fn].astype(int).reshape(50)
         return spec, tag_binary
@@ -97,6 +107,9 @@ def get_DataLoader(batch_size=32,
                    mode='train', 
                    num_workers=20):
     
+    if (mode=='valid' or mode=='test') and batch_size!=1:
+        raise Exception("Validation and test modes only allow batch_size=1")
+        
     data_loader = data.DataLoader(dataset=AudioFolder(input_length, 
                                                       spec_path, 
                                                       audio_path, 
@@ -104,6 +117,7 @@ def get_DataLoader(batch_size=32,
                                                       mode),
                                   batch_size=batch_size,
                                   shuffle=True,
-                                  pin_memory=True, # for CUDA
+                                  pin_memory=True if mode=='train' else False, # for CUDA
                                   num_workers=num_workers)
+    
     return data_loader
