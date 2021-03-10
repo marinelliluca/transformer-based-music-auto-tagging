@@ -132,12 +132,12 @@ class Backend2(nn.Module):
         self.seq2seq.flatten_parameters() 
         seq,_ = self.seq2seq(seq)
         
-        # Attention
+        # Self-attention
         seq = self.append_cls(seq)        
         seq = self.transformer_encoder(seq)
-        # Pool by taking the first token
-        x = seq[0,:,:]
         
+        # Pool by taking the first (CSL) token
+        x = seq[0,:,:]
         x = self.dense1(x)
         x = nn.ReLU()(x)
         
