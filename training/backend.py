@@ -88,7 +88,9 @@ class Backend(nn.Module):
 #########
 
 class Backend2(nn.Module):
-
+    '''
+    Inspired by https://github.com/minzwon/sota-music-tagging-models/
+    '''
     def __init__(self,main_dict, 
                  bert_config = None):
         super(Backend2, self).__init__()
