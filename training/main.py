@@ -82,7 +82,7 @@ class CRNNSA(nn.Module):
         
         return x
 
-class MainWrapper(object):
+class Solver(object):
     def __init__(self, main_dict):
         
         # Data loader
@@ -120,6 +120,7 @@ class MainWrapper(object):
         if torch.cuda.is_available():
             self.model.cuda()
         self.model = torch.nn.DataParallel(self.model)
+        
         # Optimizer
         """see https://www.fast.ai/2018/07/02/adam-weight-decay/"""
         self.optimizer = torch.optim.AdamW(self.model.parameters(), self.initial_lr)
@@ -140,7 +141,7 @@ class MainWrapper(object):
         print(f"tensorboard --logdir '{log_dir}' --port ")
         self.writer = SummaryWriter(log_dir)
 
-    def load(self, filename):
+    def load_parameters(self, filename):
         S = torch.load(filename)
         self.model.load_state_dict(S)
 
@@ -153,7 +154,7 @@ class MainWrapper(object):
 
             # change optimizer
             if current_optimizer == 'adam' and drop_counter == 40:
-                self.load(os.path.join(self.model_save_path, 'best_model.pth'))
+                self.load_parameters(os.path.join(self.model_save_path, 'best_model.pth'))
                 self.optimizer = torch.optim.SGD(self.model.parameters(), 
                                                  0.001, 
                                                  momentum=0.9, 
@@ -164,7 +165,7 @@ class MainWrapper(object):
                 print('sgd 1e-3')
             # first drop
             if current_optimizer == 'sgd_1' and drop_counter == 20:
-                self.load(os.path.join(self.model_save_path, 'best_model.pth'))
+                self.load_parameters(os.path.join(self.model_save_path, 'best_model.pth'))
                 for pg in self.optimizer.param_groups:
                     pg['lr'] = 0.0001
                 current_optimizer = 'sgd_2'
@@ -172,7 +173,7 @@ class MainWrapper(object):
                 print('sgd 1e-4')
             # second drop
             if current_optimizer == 'sgd_2' and drop_counter == 20:
-                self.load(os.path.join(self.model_save_path, 'best_model.pth'))
+                self.load_parameters(os.path.join(self.model_save_path, 'best_model.pth'))
                 for pg in self.optimizer.param_groups:
                     pg['lr'] = 0.00001
                 current_optimizer = 'sgd_3'
@@ -256,6 +257,6 @@ class MainWrapper(object):
         return roc_auc, pr_auc
     
 if __name__ == '__main__':
-    wrapper = MainWrapper(main_dict)
-    #wrapper.train(drop_counter=40, best_roc_auc=0.8736) # pass nothing to start a new session
-    wrapper.train()
+    solver = Solver(main_dict)
+    #solver.train(drop_counter=40, best_roc_auc=0.8736) # pass nothing to start a new session
+    solver.train()
