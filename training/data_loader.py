@@ -32,15 +32,14 @@ class AudioFolder(data.Dataset):
                                                "training/msd_metadata/msd_id_to_tag_vector.cP"), 'rb'))
         
     def __getitem__(self, index):
-
         spec = None
         while spec is None:
             try:
                 spec, tag_binary = self.get_spec(index)
             except: # audio not found or broken (very very rare)
+                print(self.fl[index])
                 index = np.random.randint(0,high=len(self.fl))
                 spec = None
-
         return spec.astype('float32'), tag_binary.astype('float32')
 
     def get_songlist(self):
@@ -52,7 +51,9 @@ class AudioFolder(data.Dataset):
             self.fl = train[201680:]
         elif self.mode == 'test':
             self.fl = pkl.load(open(os.path.join(self.path_to_repo,
-                                                 "training/msd_metadata/filtered_list_train.cP"), 'rb'))
+                                                 "training/msd_metadata/filtered_list_test.cP"), 'rb'))
+        else:
+            raise Exception("mode must be 'train', 'valid' or 'test'")
             
     def compute_melspectrogram(self, audio_fn):
         with warnings.catch_warnings():
@@ -85,12 +86,21 @@ class AudioFolder(data.Dataset):
             random_idx = np.random.randint(0, high = upper_idx)
             spec = whole_spec[:, random_idx:random_idx+self.input_length][np.newaxis]
             
-        elif self.mode=='valid' or self.mode=='test':
-            # pass all song chunks
+        elif self.mode in ['valid','test']:
+            # this is Won's configuration (as in https://arxiv.org/abs/2006.00751)
+            n_chunks = 16
+            hop = (whole_spec.shape[1] - self.input_length) // n_chunks
+            spec = np.zeros((n_chunks,whole_spec.shape[0],self.input_length))
+            for i in range(n_chunks):
+                spec[i] = whole_spec[:, i*hop:i*hop+self.input_length]
+            
+            # this gives slightly better results
+            """ 
             n_chunks = whole_spec.shape[1] // self.input_length
             spec = np.zeros((n_chunks,whole_spec.shape[0],self.input_length)) # stack of chunks
             for i in range(n_chunks):
                 spec[i]=whole_spec[:,i*self.input_length:(i+1)*self.input_length]
+            """
 
         tag_binary = self.tags[fn].astype(int).reshape(50)
         return spec, tag_binary

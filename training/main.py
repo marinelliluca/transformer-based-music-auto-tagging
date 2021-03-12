@@ -17,7 +17,7 @@ from torch.autograd import Variable
 from torch.utils.tensorboard import SummaryWriter
 
 from frontend import Frontend_mine, Frontend_won
-from backend import Backend, Backend2
+from backend import Backend
 from data_loader import get_DataLoader
 
 os.environ["NVIDIA_VISIBLE_DEVICES"] = "1"
@@ -36,11 +36,12 @@ main_dict = {"frontend_dict":
              "backend_dict":
              {"n_class":50,
               "bert_config":None, 
-              "recurrent_units":2}, #  pass recurrent_units = None to deactivate
+              "recurrent_units":2, 
+              "bidirectional":True}, #  pass recurrent_units = None to deactivate
              
              "training_dict":
              {"dataset":'msd',
-              "architecture":'crnnsa_5s',
+              "architecture":'bidirectional_5s',
               "n_epochs":1000,
               "learning_rate":1e-4},
              
@@ -58,19 +59,15 @@ def to_var(x):
         x = x.cuda()
     return Variable(x)
 
-class CRNNSA(nn.Module):
-    
-    """
-    Convolutional Recurrent Neural Network with Self Attention
-    """
+class AssembleModel(nn.Module):
     
     def __init__(self, main_dict=None, backend=None, frontend=None):
-        super(CRNNSA, self).__init__()
+        super(AssembleModel, self).__init__()
         
 
         if main_dict is not None:
             self.frontend = Frontend_mine(main_dict["frontend_dict"]) #Frontend_won() #
-            self.backend = Backend2(main_dict)
+            self.backend = Backend(main_dict)
         else:
             self.frontend = frontend
             self.backend = backend
@@ -116,7 +113,7 @@ class Solver(object):
         self.initial_lr = main_dict["training_dict"]["learning_rate"]
         
         # Model
-        self.model = CRNNSA(main_dict)
+        self.model = AssembleModel(main_dict)
         if torch.cuda.is_available():
             self.model.cuda()
         self.model = torch.nn.DataParallel(self.model)
