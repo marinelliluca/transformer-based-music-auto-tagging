@@ -27,13 +27,13 @@ class Backend(nn.Module):
                                   backend_dict["recurrent_units"], 
                                   bidirectional = backend_dict["bidirectional"])
 
-        m = 2 if backend_dict["bidirectional"] else 1
-        self.transformer_encoder = nn.TransformerEncoder(nn.TransformerEncoderLayer(m*self.frontend_out_channels,8), 
+        self.m = 2 if backend_dict["bidirectional"] else 1
+        self.transformer_encoder = nn.TransformerEncoder(nn.TransformerEncoderLayer(self.m*self.frontend_out_channels,8), 
                                                          num_layers=2)
         
         self.single_cls = self.get_cls()
         
-        self.dense1 = nn.Linear(self.frontend_out_channels, self.frontend_out_channels)
+        self.dense1 = nn.Linear(self.m*self.frontend_out_channels, self.frontend_out_channels)
         
         # Dense
         self.dropout = nn.Dropout(0.5)
@@ -41,7 +41,7 @@ class Backend(nn.Module):
         
     def get_cls(self,):
         torch.manual_seed(42) # for reproducibility
-        single_cls = torch.rand((1,self.frontend_out_channels))
+        single_cls = torch.rand((1,self.m*self.frontend_out_channels))
         return single_cls
 
     def append_cls(self, x):
