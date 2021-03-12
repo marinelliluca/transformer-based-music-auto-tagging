@@ -27,8 +27,8 @@ class Backend(nn.Module):
                                   backend_dict["recurrent_units"], 
                                   bidirectional = backend_dict["bidirectional"])
 
-        
-        self.transformer_encoder = nn.TransformerEncoder(nn.TransformerEncoderLayer(self.frontend_out_channels,8), 
+        m = 2 if backend_dict["bidirectional"] else 1
+        self.transformer_encoder = nn.TransformerEncoder(nn.TransformerEncoderLayer(m*self.frontend_out_channels,8), 
                                                          num_layers=2)
         
         self.single_cls = self.get_cls()
@@ -60,7 +60,6 @@ class Backend(nn.Module):
             # see https://discuss.pytorch.org/t/dataparallel-issue-with-flatten-parameter/8282
             self.seq2seq.flatten_parameters() 
             seq,_ = self.seq2seq(seq)
-
         
         # Self-attention
         seq = self.append_cls(seq)        
