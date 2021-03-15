@@ -17,11 +17,11 @@ from torch.autograd import Variable
 from torch.utils.tensorboard import SummaryWriter
 
 from frontend import Frontend_mine, Frontend_won
-from backend import Backend
+from backend import Backend, Backend2
 from data_loader import get_DataLoader
 
-os.environ["NVIDIA_VISIBLE_DEVICES"] = "1"
-os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+#os.environ["NVIDIA_VISIBLE_DEVICES"] = "3"
+os.environ["CUDA_VISIBLE_DEVICES"] = "3"
 
 import torch.multiprocessing
 torch.multiprocessing.set_sharing_strategy('file_system')
@@ -41,7 +41,7 @@ main_dict = {"frontend_dict":
              
              "training_dict":
              {"dataset":'msd',
-              "architecture":'bidirectional_5s',
+              "architecture":'conv_before_encoder_5s',
               "n_epochs":1000,
               "learning_rate":1e-4},
              
