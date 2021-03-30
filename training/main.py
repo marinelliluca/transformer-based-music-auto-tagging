@@ -35,9 +35,8 @@ main_dict = {"frontend_dict":
              
              "backend_dict":
              {"n_class":50,
-              "bert_config":None, 
-              "recurrent_units":2, 
-              "bidirectional":True}, #  pass recurrent_units = None to deactivate
+              "recurrent_units":None, 
+              "bidirectional":False}, #  pass recurrent_units = None to deactivate
              
              "training_dict":
              {"dataset":'msd',
