@@ -20,7 +20,7 @@ from frontend import Frontend_mine, Frontend_won
 from backend import Backend, Backend2
 from data_loader import get_DataLoader
 
-#os.environ["NVIDIA_VISIBLE_DEVICES"] = "3"
+os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
 os.environ["CUDA_VISIBLE_DEVICES"] = "3"
 
 import torch.multiprocessing
