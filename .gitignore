@@ -6,6 +6,12 @@ __pycache__/
 # C extensions
 *.so
 
+# Training logs
+training/logs
+
+# Models (upload manually the final one)
+models/
+
 # Distribution / packaging
 .Python
 build/
@@ -26,6 +32,7 @@ share/python-wheels/
 .installed.cfg
 *.egg
 MANIFEST
+Pipfile
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
