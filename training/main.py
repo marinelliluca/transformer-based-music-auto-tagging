@@ -17,7 +17,7 @@ from torch.autograd import Variable
 from torch.utils.tensorboard import SummaryWriter
 
 from frontend import Frontend_mine, Frontend_won
-from backend import Backend, Backend2
+from backend import Backend
 from data_loader import get_DataLoader
 
 os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
