@@ -65,7 +65,7 @@ class AssembleModel(nn.Module):
         
 
         if main_dict is not None:
-            self.frontend = Frontend_mine(main_dict["frontend_dict"]) #Frontend_won() #
+            self.frontend = Frontend_mine(main_dict["frontend_dict"])
             self.backend = Backend(main_dict)
         else:
             self.frontend = frontend

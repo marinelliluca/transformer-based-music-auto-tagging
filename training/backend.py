@@ -1,10 +1,5 @@
-import math
-import copy
 import torch
 import torch.nn as nn
-import numpy as np
-
-from bert_modules import BertConfig, BertEncoder, BertPooler
 
 class Backend(nn.Module):
     '''
