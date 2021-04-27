@@ -79,7 +79,7 @@ class Frontend_mine(nn.Module):
                   "list_pool_sizes":  [(4,1),(2,2),(2,2),(2,2),(2,2),(2,2)], 
                   "list_avgpool_flags":[False,False,False,False,False,True]}
 
-    conv_stack = ConvStack(front_end_dict)
+    conv_stack = Frontend_mine(front_end_dict)
 
     print(conv_stack)
 
