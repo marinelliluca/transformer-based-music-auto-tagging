@@ -1,1 +1,2 @@
-*.cP, *.ipynb linguist-detectable=false
+*.cP linguist-detectable=false
+*.ipynb linguist-detectable=false
