@@ -3,41 +3,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 import math
 
-from functools import reduce
-from operator import __add__
-
-class Res_2d(nn.Module):
-    """
-    Adopted from https://github.com/minzwon/sota-music-tagging-models/
-    """
-
-    def __init__(self, input_channels, output_channels, shape=3, stride=2):
-        super(Res_2d, self).__init__()
-        # convolution
-        self.conv_1 = nn.Conv2d(input_channels, output_channels, shape, stride=stride, padding=shape//2)
-        self.bn_1 = nn.BatchNorm2d(output_channels)
-        self.conv_2 = nn.Conv2d(output_channels, output_channels, shape, padding=shape//2)
-        self.bn_2 = nn.BatchNorm2d(output_channels)
-
-        # residual
-        #self.diff = False
-        if (stride != 1) or (input_channels != output_channels):
-            self.conv_3 = nn.Conv2d(input_channels, output_channels, shape, stride=stride, padding=shape//2)
-            self.bn_3 = nn.BatchNorm2d(output_channels)
-            self.diff = True
-        self.relu = nn.ReLU()
-
-    def forward(self, x):
-        # convolution
-        out = self.bn_2(self.conv_2(self.relu(self.bn_1(self.conv_1(x)))))
-
-        # residual
-        if self.diff:
-            x = self.bn_3(self.conv_3(x))
-        out = x + out
-        out = self.relu(out)
-        return out
-
 def _calc_same_pad(i, k, s, d):
     return max((math.ceil(i / s) - 1) * s + (k - 1) * d + 1 - i, 0)
 
@@ -114,7 +79,7 @@ class Frontend_mine(nn.Module):
                   "list_pool_sizes":  [(4,1),(2,2),(2,2),(2,2),(2,2),(2,2)], 
                   "list_avgpool_flags":[False,False,False,False,False,True]}
 
-    conv_stack = ConvStack(front_end_dict)
+    conv_stack = Frontend_mine(front_end_dict)
 
     print(conv_stack)
 
@@ -157,39 +122,4 @@ class Frontend_mine(nn.Module):
             raise Exception("Insufficient pooling along the frequency axis, "+
                             "the required resulting size is 1.")    
             
-        return x
-    
-class Frontend_won(nn.Module):
-    
-    # Code adopted from https://github.com/minzwon/sota-music-tagging-models/
-
-    def __init__(self,
-                 n_channels=128):
-        super(Frontend_won, self).__init__()
-        
-        self.spec_bn = nn.BatchNorm2d(1)
-
-        # CNN
-        self.layer1 = Res_2d(1, n_channels, stride=2)
-        self.layer2 = Res_2d(n_channels, n_channels, stride=2)
-        self.layer3 = Res_2d(n_channels, n_channels*2, stride=2)
-        self.layer4 = Res_2d(n_channels*2, n_channels*2, stride=(2, 1))
-        self.layer5 = Res_2d(n_channels*2, n_channels*2, stride=(2, 1))
-        self.layer6 = Res_2d(n_channels*2, n_channels*2, stride=(2, 1))
-        self.layer7 = Res_2d(n_channels*2, n_channels*2, stride=(2, 1))
-
-    def forward(self, x):
-        
-        x = self.spec_bn(x)
-
-        # CNN
-        x = self.layer1(x)
-        x = self.layer2(x)
-        x = self.layer3(x)
-        x = self.layer4(x)
-        x = self.layer5(x)
-        x = self.layer6(x)
-        x = self.layer7(x)
-        x = x.squeeze(2)
-        
         return x
