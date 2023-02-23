@@ -16,7 +16,7 @@ import torch.nn.functional as F
 from torch.autograd import Variable
 from torch.utils.tensorboard import SummaryWriter
 
-from frontend import Frontend_mine, Frontend_won
+from frontend import Frontend_mine
 from backend import Backend
 from data_loader import get_DataLoader
 
