@@ -1,4 +1,4 @@
-# Coursework: Deep Learning for Audio and Music (QMUL)
+# Deep Learning for Audio and Music (QMUL)
 
 Heavily modified from https://github.com/minzwon/sota-music-tagging-models/ 
 
