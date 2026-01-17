@@ -1,4 +1,4 @@
-# Deep Learning for Audio and Music (QMUL)
+# Transformer-based music auto-tagging
 
 Heavily modified from https://github.com/minzwon/sota-music-tagging-models/ 
 
